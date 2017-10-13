@@ -261,6 +261,7 @@ fn main() {
     });
 
     let mut list_selection = 0;
+    let mut prev_fail = false;
 
     loop {
         match window.getch() {
@@ -317,10 +318,16 @@ fn main() {
                     }
 
                     if dropped == 3 && tracker.is_up() {
-                        tracker.down();
+                        if prev_fail {
+                            tracker.down();
+                        } else {
+                            prev_fail = true;
+                        }
+
                     }
                     else if tracker.is_down() && dropped != 3 {
                         tracker.up();
+                        prev_fail = false;
                     }
 
                     ping.refresh();
