@@ -326,6 +326,12 @@ fn main() {
         print_downtimes(&down_list, &tracker, list_selection);
     }
 
+
+    stats.delwin();
+    down_list.delwin();
+    ping.delwin();
+    window.delwin();
+
     endwin();
 }
 
