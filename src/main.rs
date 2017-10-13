@@ -209,8 +209,8 @@ enum PingStatus {
 fn main() {
     let window = initscr();
     let ping = window.subwin(7, 38, 0, 2).expect("Could not make ping window.");
-    let stats = window.subwin(7, 38, 0, 41).expect("Could not make stats window.");
-    let down_list = window.subwin(window.get_max_y() - 10, 38, 8, 2).expect("Could not make downtime window.");
+    let stats = window.subwin(9, 38, 0, 41).expect("Could not make stats window.");
+    let mut down_list = window.subwin(window.get_max_y() - 10, 38, 8, 2).expect("Could not make downtime window.");
     
     window.nodelay(true);
     noecho();
@@ -280,6 +280,14 @@ fn main() {
                 } else {
                     flash();
                 }
+            }
+            Some(Input::KeyResize) => {
+                down_list = window
+                    .subwin(window.get_max_y() - 10, 38, 8, 2)
+                    .expect("Could not make downtime window.");
+                
+                window.mv(8, 0);
+                window.clrtobot();
             }
             Some(key) => {
                 window.mvaddstr(window.get_max_y() - 1, 0, &format!("{:?}", key));
