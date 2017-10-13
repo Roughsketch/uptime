@@ -56,7 +56,6 @@ struct TimeTracker {
     uptimes: Vec<Period>,
     downtime: Option<Period>,
     downtimes: Vec<Period>,
-    longest_uptime: Period,
 }
 
 impl TimeTracker {
@@ -70,17 +69,12 @@ impl TimeTracker {
             uptimes: uptimes,
             downtime: None,
             downtimes: Vec::new(),
-            longest_uptime: Period::new(),
         }
     }
 
     pub fn down(&mut self) {
         if let Some(last) = self.uptimes.last_mut() {
             last.finalize();
-        }
-
-        if self.uptime.unwrap().elapsed() > self.longest_uptime.elapsed() {
-            self.longest_uptime = self.uptime.unwrap();
         }
 
         self.uptime = None;
@@ -145,6 +139,50 @@ impl TimeTracker {
 
         let total = std::time::UNIX_EPOCH.elapsed().unwrap().as_secs() - self.start.timestamp() as u64;
         total_up / total as f64
+    }
+
+    pub fn longest_uptime_str(&self) -> String {
+        let max = self.uptimes.iter().max_by(|x, y| {
+            x.elapsed().cmp(&y.elapsed())
+        });
+
+        if let Some(cur_time) = self.uptime {
+            match max {
+                Some(time) => {
+                    if cur_time.elapsed() > time.elapsed() {
+                        return self.uptime_str()
+                    }
+                }
+                None => return self.uptime_str(),
+            }
+            
+        }
+
+        max.and_then(|inst| {
+            Some(format_duration(inst.elapsed()))
+        }).unwrap_or_else(|| "00:00:00".into())
+    }
+
+    pub fn longest_downtime_str(&self) -> String {
+        let max = self.downtimes.iter().max_by(|x, y| {
+            x.elapsed().cmp(&y.elapsed())
+        });
+
+        if let Some(cur_time) = self.downtime {
+            match max {
+                Some(time) => {
+                    if cur_time.elapsed() > time.elapsed() {
+                        return self.uptime_str()
+                    }
+                }
+                None => return self.uptime_str(),
+            }
+            
+        }
+
+        max.and_then(|inst| {
+            Some(format_duration(inst.elapsed()))
+        }).unwrap_or_else(|| "00:00:00".into())
     }
 }
 
@@ -301,11 +339,13 @@ fn print_stats(window: &Window, tracker: &TimeTracker) {
 
     let percent_up = tracker.uptime_percentage() * 100.0;
 
-    window.mvaddstr(2, 2, 
+    window.mvaddstr(1, 2, 
         &format!("Uptime        : {}", tracker.uptime_str()));
+
+    window.mvaddstr(2, 2, 
+        &format!("Max Uptime    : {}", tracker.longest_uptime_str()));
+
     window.mvaddstr(3, 2, 
-        &format!("Downtime      : {}", tracker.downtime_str()));
-    window.mvaddstr(4, 2, 
         &format!("Total Uptime  : {}", tracker.total_uptime_str()));
     
     window.printw(" (");
@@ -325,6 +365,12 @@ fn print_stats(window: &Window, tracker: &TimeTracker) {
     window.printw("%) ");
 
     window.mvaddstr(5, 2, 
+        &format!("Downtime      : {}", tracker.downtime_str()));
+
+    window.mvaddstr(6, 2, 
+        &format!("Max Downtime  : {}", tracker.longest_downtime_str()));
+
+    window.mvaddstr(7, 2, 
         &format!("Total Downtime: {}", tracker.total_downtime_str()));
     refresh_window(window);
 }
