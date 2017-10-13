@@ -432,11 +432,17 @@ fn clear_err(window: &Window) {
 
 fn print_host(window: &Window, passed: bool, resp: &PingResponse, host_num: usize) {
     if passed {
+        let mut parts = resp.hostname.split('.');
+
         window.mvaddstr(host_num as i32 + 2, 1, "[");
         window.attrset(COLOR_PAIR(2));
         window.printw("PASS");
         window.attrset(COLOR_PAIR(7));
-        window.printw(&format!("]: {:>14} (", resp.hostname,));
+        window.printw(&format!("]: {:>3}.{:>3}.{:>3}.{:>3} (",
+            parts.nth(0).unwrap(),
+            parts.nth(0).unwrap(),
+            parts.nth(0).unwrap(),
+            parts.nth(0).unwrap()));
 
         if resp.latency_ms < 50.0 {
             window.attrset(COLOR_PAIR(2));
