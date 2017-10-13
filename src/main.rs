@@ -210,7 +210,7 @@ fn main() {
     let window = initscr();
     let ping = window.subwin(7, 38, 0, 2).expect("Could not make ping window.");
     let stats = window.subwin(9, 38, 0, 41).expect("Could not make stats window.");
-    let mut down_list = window.subwin(window.get_max_y() - 10, 38, 8, 2).expect("Could not make downtime window.");
+    let mut down_list = window.subwin(window.get_max_y() - 9, 38, 8, 2).expect("Could not make downtime window.");
     
     window.nodelay(true);
     noecho();
@@ -220,6 +220,7 @@ fn main() {
     }
 
     curs_set(0);
+    window.keypad(true);
 
     for (i, color) in COLOR_TABLE.into_iter().enumerate() {
         init_pair(i as i16, *color, COLOR_BLACK);
@@ -264,17 +265,14 @@ fn main() {
     loop {
         match window.getch() {
             Some(Input::Character('q')) => break,
-            Some(Input::Character('f')) => {
-                beep();
-            },
-            Some(Input::Character('u')) => {
+            Some(Input::KeyDown) => {
                 if list_selection > 0 {
                     list_selection -= 1
                 } else {
                     flash();
                 }
             }
-            Some(Input::Character('d')) => {
+            Some(Input::KeyUp) => {
                 if list_selection < tracker.downtimes().len() {
                     list_selection += 1
                 } else {
@@ -283,7 +281,7 @@ fn main() {
             }
             Some(Input::KeyResize) => {
                 down_list = window
-                    .subwin(window.get_max_y() - 10, 38, 8, 2)
+                    .subwin(window.get_max_y() - 9, 38, 8, 2)
                     .expect("Could not make downtime window.");
                 
                 window.mv(8, 0);
